@@ -10,7 +10,7 @@ object Day1 {
   }
 
   def part1(): Int = {
-    (inputAsSeq("input_1.txt") :+ "")
+    (loadInputAsSeq("input_01.txt") :+ "")
       .foldLeft((0, Int.MinValue)){
         // accumulator is (current group sum, max so far)
         case ((currentSum, max), "") =>
@@ -23,7 +23,7 @@ object Day1 {
 
   def part2(): Int = {
     val desc = Ordering[Int].reverse
-    (inputAsSeq("input_1.txt") :+ "")
+    (loadInputAsSeq("input_01.txt") :+ "")
     .foldLeft((0, Seq.empty[Int])){
       // accumulator is (current group sum, top 3 so far)
       case ((currentSum, top), "") =>

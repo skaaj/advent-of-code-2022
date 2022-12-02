@@ -3,11 +3,19 @@ package shared
 import scala.io.Source
 
 object Helpers {
-  def inputAsSeq(filename: String) = {
+
+  def loadInput(filename: String): Iterator[String] = {
     Source
       .fromResource(filename)
       .getLines
-      .toSeq
+  }
+
+  def loadInputAsSeq(filename: String): Seq[String] = {
+      loadInput(filename).toSeq
+  }
+
+  def loadInputAsString(filename: String): String = {
+    loadInput(filename).mkString("\n")
   }
 
   extension[T1, T2] (tuple: Tuple2[T1, T2])
