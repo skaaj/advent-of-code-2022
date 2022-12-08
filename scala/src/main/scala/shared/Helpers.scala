@@ -21,4 +21,8 @@ object Helpers {
   extension[T1, T2] (tuple: Tuple2[T1, T2])
     def first: T1 = tuple._1
     def second: T2 = tuple._2
+
+  extension[A] (xs: Seq[A])
+    def takeTo(p: A => Boolean): Seq[A] =
+      xs.span(p) match { case (a, b) => a ++ b.take(1) }
 }
