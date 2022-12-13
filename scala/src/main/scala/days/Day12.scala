@@ -46,7 +46,7 @@ object Day12 {
   def findShortest(start: Point, end: Point, edges: Map[Point, Seq[Point]]) = {
     def go(remaining: Seq[(Point, Int)], done: Set[Point]): Int = {
       def hasRemainingEdges(point: Point): Boolean = {
-        val res = edges.get(point).toSet
+        val res = edges.get(point).get.toSet
           .diff(done)
           .size > 0
         res
