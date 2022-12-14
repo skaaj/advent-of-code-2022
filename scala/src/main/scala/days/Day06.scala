@@ -7,7 +7,7 @@ import scala.io.Source
 import scala.util.Try
 import scala.util.matching.Regex
 
-object Day6 {
+object Day06 {
   def main(args: Array[String]): Unit = {
     println(part1())
     println(part2())

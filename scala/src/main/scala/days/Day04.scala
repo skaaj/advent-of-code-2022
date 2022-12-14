@@ -4,7 +4,7 @@ import shared.Helpers.*
 
 import scala.io.Source
 
-object Day4 {
+object Day04 {
   def main(args: Array[String]): Unit = {
     println(part1())
     println(part2())

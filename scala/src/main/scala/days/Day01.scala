@@ -3,7 +3,7 @@ package days
 import scala.io.Source
 import shared.Helpers.*
 
-object Day1 {
+object Day01 {
   def main(args: Array[String]): Unit = {
     println(part1())
     println(part2())

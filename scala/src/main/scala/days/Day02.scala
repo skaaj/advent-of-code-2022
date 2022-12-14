@@ -4,7 +4,7 @@ import shared.Helpers.*
 
 import scala.io.Source
 
-object Day2 {
+object Day02 {
 
   enum HandSign(val score: Int):
     case Rock extends HandSign(1)
