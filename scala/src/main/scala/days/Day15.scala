@@ -5,6 +5,7 @@ import org.json4s.*
 import org.json4s.jackson.Serialization.read
 import shared.Helpers.*
 
+import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
@@ -15,11 +16,12 @@ object Day15 {
   implicit val formats: Formats = DefaultFormats
 
   def main(args: Array[String]): Unit = {
-    println(part1())
-    println(part2())
+    println(time(part1()))
+    println(time(part2()))
   }
 
   type Vec2d = (Long, Long)
+
   case class Sensor(pos: Vec2d, beacon: Vec2d, range: Long) {
     def isInRange(other: Vec2d): Boolean = {
       manDistance(pos, other) <= range
@@ -53,35 +55,67 @@ object Day15 {
     }.flatten
   }
 
-  def getCellsWithoutBeacon(boundsX: Option[(Long, Long)], targetY: Long, sensors: Seq[Sensor]): Long = {
-    val minX = boundsX.map(_.first).getOrElse(
-      sensors.map(sensor => Math.min(sensor.pos.x - sensor.range, sensor.beacon.x)).min
-    )
-    val maxX = boundsX.map(_.second).getOrElse(
-      sensors.map(sensor => Math.max(sensor.pos.x + sensor.range, sensor.beacon.x)).max
-    )
-    val sensorsReachingTarget = sensors.filter(sensor =>
-      sensor.range >= Math.abs(sensor.pos.y - targetY)
-    )
+  def getCellsWithoutBeacon(targetY: Long, sensors: Seq[Sensor]): Seq[Vec2d] = {
+    // compute collisions segments
+    val collisionSegments = sensors.flatMap {
+      case Sensor(sp @ (sx, sy), bp @ (bx, by), range) =>
+        val overflow = range - Math.abs(sy - targetY)
+        // negative overflow -> no collision
+        // zero overflow -> collision on one cell
+        // positive overflow -> collision multiple cells
+        if(overflow >= 0) {
+          Seq((sx - overflow, sx + overflow))
+        } else {
+          Seq.empty[Vec2d]
+        }
+    }
+    // merge them together if needed
+    @tailrec
+    def go(prev: Vec2d, created: Seq[Vec2d], remaining: Seq[Vec2d]): Seq[Vec2d] = {
+      remaining.headOption match {
+        case Some(item) =>
+          if(item.first <= prev.second) {
+            val newSegment = (
+              Math.min(item.first, prev.first),
+              Math.max(item.second, prev.second)
+            )
+            go(newSegment, created, remaining.drop(1))
+          } else {
+            go(item, prev +: created, remaining.drop(1))
+          }
+        case None =>
+          prev +: created
+      }
+    }
 
-    var counter = 0
-    for {
-      x <- minX to maxX
-      y = targetY
-      if sensorsReachingTarget.exists(sensor =>
-        sensor.beacon != (x, y) && sensor.isInRange((x, y))
-      )
-    } counter += 1
-
-    counter
+    collisionSegments.sortBy(_.first) match {
+      case head :: tail if tail.nonEmpty =>
+        go(head, Seq.empty, tail)
+      case xs =>
+        xs
+    }
   }
 
   def part1() = {
     val sensors = parse("input_15.txt")
-    getCellsWithoutBeacon(None, 2000000, sensors)
+    val segments = getCellsWithoutBeacon(targetY = 2000000, sensors)
+    segments.map(segment => segment.second - segment.first).sum
   }
 
   def part2() = {
-    ???
+    val sensors = parse("input_15.txt")
+    val maxBound = 4000000
+
+    val segmentsByLine = for {
+      y <- (0 to maxBound).view
+      segments = getCellsWithoutBeacon(y, sensors)
+      if segments.length > 1
+    } yield (y, segments)
+
+    segmentsByLine.headOption.map {
+      case (y, segments) if segments.nonEmpty =>
+        val x = segments.sortBy(_.first).map(_.second)(0)
+        (4000000 * x) + y
+    }.getOrElse(-1)
   }
 }

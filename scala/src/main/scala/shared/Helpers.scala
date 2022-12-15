@@ -18,6 +18,15 @@ object Helpers {
     loadInput(filename).mkString("\n")
   }
 
+  // From: http://biercoff.com/easily-measuring-code-execution-time-in-scala/
+  def time[R](block: => R): R = {
+    val t0 = System.nanoTime()
+    val result = block
+    val t1 = System.nanoTime()
+    println(f"Elapsed time: ${(t1 - t0) / 1_000}%,d µs")
+    result
+  }
+
   extension[T1, T2] (tuple: Tuple2[T1, T2])
     def first: T1 = tuple._1
     def second: T2 = tuple._2

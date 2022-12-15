@@ -30,10 +30,6 @@ object Day09 {
     (a.first - b.first, a.second - b.second)
   }
 
-  def half(a: Point): Point = {
-    (a.first / 2, a.second / 2)
-  }
-
   def printBoard(head: Point, tail: Point): Unit = {
     for {
       y <- 0 until 6
@@ -51,10 +47,10 @@ object Day09 {
 
   def printBoard2(head: Point, tail: Seq[Point]): Unit = {
     for {
-      y <- 5 to 0 by -1
+      y <- 25 to 0 by -1
     } {
       for {
-        x <- 0 until 6
+        x <- -25 until 25
       } {
         if((x,y) == head) print("H")
         else if(tail.contains((x,y))) print("T")
@@ -89,8 +85,7 @@ object Day09 {
         case Seq() =>
           visited
         case (dir, mag) :: nextMoves =>
-          //printBoard(head, tail)
-          //println()
+          printBoard(head, tail)
           val delta = deltaFromName(dir)
           val newHead = add(head, delta)
           val distance = getDistance(newHead, tail)
@@ -102,7 +97,6 @@ object Day09 {
             }
           }
           val newMoves = if(mag == 1) nextMoves else (dir, mag - 1) +: nextMoves
-          //println(f"go($newHead, $newTail, $head, $dir $mag, ${visited + newTail})")
           go(newHead, newTail, newMoves, visited + newTail)
       }
     }
@@ -122,21 +116,24 @@ object Day09 {
       .map(_.split(" "))
       .map({ case Array(dir, mag) => (dir, mag.toInt) })
 
+    def normalize(x: Int): Int =
+      x / Math.abs(x)
+
     def updateTail(head: Point, tail: Seq[Point]): Seq[Point] = {
       tail.foldLeft((head, Seq.empty[Point])) {
         case ((prev, updated), knot) =>
-          val dx = prev.first - knot.first
-          val dy = prev.second - knot.second
-          val mx =
-            if(dx < -1) prev.first + 1
-            else if(dx > 1) prev.first - 1
-            else knot.first
-          val my =
-            if(dy < -1) prev.second + 1
-            else if(dy > 1) prev.second - 1
-            else knot.second
-          val newKnot = (mx, my)
-          println(f"T: $newKnot")
+          val (dx, dy) = (prev.x - knot.x, prev.y - knot.y)
+          val (mx, my) = (dx, dy) match {
+            case (a, b) if Math.abs(a) <= 1 && Math.abs(b) <= 1 =>
+              (0, 0)
+            case (a, b) if a == 0 =>
+              (0, normalize(b))
+            case (a, b) if b == 0 =>
+              (normalize(a), 0)
+            case (a, b) =>
+              (normalize(a), normalize(b))
+          }
+          val newKnot = (knot.x + mx, knot.y + my)
           (newKnot, updated :+ newKnot)
       }.second
     }
@@ -155,10 +152,8 @@ object Day09 {
           printBoard2(head, tail)
           val delta = deltaFromName(dir)
           val newHead = add(head, delta)
-          println(f"H: $newHead")
           val newTail = updateTail(newHead, tail)
           val newMoves = if(mag == 1) nextMoves else (dir, mag - 1) +: nextMoves
-          //println(f"go($newHead, $newTail, $head, $dir $mag, ${visited + newTail})")
           println()
           go(newHead, newTail, newMoves, visited + newTail.last)
       }
