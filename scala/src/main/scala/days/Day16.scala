@@ -1,16 +1,9 @@
 package days
 
-import days.Day05.Operation
-import org.json4s.*
-import org.json4s.jackson.Serialization.read
 import shared.Helpers.*
 
 import scala.annotation.tailrec
-import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
-import scala.io.Source
 import scala.util.matching.Regex
-import scala.util.{Success, Try}
 
 object Day16 {
   def main(args: Array[String]): Unit = {
@@ -80,14 +73,18 @@ object Day16 {
       remaining: Set[String],
       timeLeft: Int
     ): Seq[(Path, Int)] = {
-      if(remaining.isEmpty || timeLeft <= 1) Seq((path, score))
+      if(remaining.isEmpty) Seq((path, score))
       else {
         remaining.foldLeft(Seq.empty[(Path, Int)]) {
           case (paths, target) =>
-            val rate = ref(target).rate
             val newTimeLeft = timeLeft - costs(current)(target) - 1
-            val newScore = score + computeScore(rate, newTimeLeft)
-            paths ++ go(target, path :+ target, newScore, remaining - target, newTimeLeft)
+            if(newTimeLeft < 1) {
+              paths ++ Seq((path, score))
+            } else {
+              val rate = ref(target).rate
+              val newScore = score + computeScore(rate, newTimeLeft)
+              paths ++ go(target, path :+ target, newScore, remaining - target, newTimeLeft)
+            }
         }
       }
     }
@@ -97,19 +94,48 @@ object Day16 {
 
   def part1() = {
     implicit val ref = parse("input_16.txt")
-    val validTargets = ref.values.filter(_.rate > 0)
+
     val totalTime = 30
+    val validTargets = ref.values.toSeq.filter(_.rate > 0)
 
     val costs =
-      (ref("AA") +: validTargets.toSeq).map(valve =>
+      (ref("AA") +: validTargets).map(valve =>
         (valve.name, getShortestPaths(ref(valve.name)))
       ).toMap
 
-    val outcomes = computeOutcomes("AA", costs, totalTime, validTargets.map(_.name).toSet)
-    outcomes.sortBy(-_.second).head
+    computeOutcomes("AA", costs, totalTime, validTargets.map(_.name).toSet)
+      .maxBy(_.second)
   }
 
   def part2() = {
-    ???
+    implicit val ref = parse("input_16.txt")
+
+    val totalTime = 26
+    val validTargets = ref.values.toSeq.collect {
+      case valve if valve.rate > 0 => valve.name
+    }
+
+    val costsFromStart = ("AA", getShortestPaths(ref("AA")))
+    val costsFromOthers =
+      validTargets.map(valve =>
+        (valve, getShortestPaths(ref(valve)))
+      ).toMap
+    val costs = costsFromOthers + costsFromStart
+
+    val outcomes = for {
+      areaCenter <- validTargets
+      areaRadius <- 1 until validTargets.length
+      humanTargets = costs(areaCenter).toSeq
+        .sortBy(_.second)
+        .map(_.first)
+        .take(areaRadius)
+      humanPass = computeOutcomes("AA", costs, totalTime, humanTargets.toSet + areaCenter)
+        .maxBy(_.second)
+      elephantTargets = validTargets.toSet.diff(humanPass.first.toSet)
+      elephantPass = computeOutcomes("AA", costs, totalTime, elephantTargets)
+        .maxBy(_.second)
+    } yield (humanPass, elephantPass, humanPass.second + elephantPass.second)
+
+    outcomes.maxBy(_._3)
   }
 }

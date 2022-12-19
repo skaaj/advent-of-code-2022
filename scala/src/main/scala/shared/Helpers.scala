@@ -23,7 +23,7 @@ object Helpers {
     val t0 = System.nanoTime()
     val result = block
     val t1 = System.nanoTime()
-    println(f"Elapsed time: ${(t1 - t0) / 1_000}%,d µs")
+    println(f"Elapsed: ${(t1 - t0) / 1_000}%,d µs")
     result
   }
 
